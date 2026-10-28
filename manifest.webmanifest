@@ -1,0 +1,11 @@
+{
+  "name": "Loop Music Player",
+  "short_name": "Loop",
+  "description": "Your music, your rules. A personal music player with unlimited repeat and playlists.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101014",
+  "theme_color": "#101014",
+  "orientation": "portrait",
+  "icons": []
+}

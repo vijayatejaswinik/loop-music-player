@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101014">
+  <meta name="description" content="A personal music player with playlists and unlimited repeat.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Loop — Music player</title>
+  <style>
+    :root{color-scheme:dark;--bg:#101014;--panel:#19191f;--muted:#a5a4ad;--line:#2b2a32;--accent:#b7f36b;--white:#f7f6f2}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--white);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    button,input{font:inherit} button{border:0;color:inherit;cursor:pointer} .app{max-width:720px;min-height:100dvh;margin:auto;padding:18px 18px 30px;display:flex;flex-direction:column;gap:20px}
+    header{display:flex;align-items:center;justify-content:space-between}.brand{font-size:24px;font-weight:800;letter-spacing:-1px}.brand span{color:var(--accent)}.tag{font-size:12px;color:var(--muted)}
+    .now{background:linear-gradient(145deg,#24242d,#17171c);border:1px solid var(--line);border-radius:28px;padding:24px 20px 18px;text-align:center}
+    .art{width:min(62vw,250px);aspect-ratio:1;margin:4px auto 20px;border-radius:24px;background:radial-gradient(circle at 30% 25%,#e0ffac,#b7f36b 18%,#586e3d 46%,#282a2b 75%);display:grid;place-items:center;box-shadow:0 18px 50px #0008}.art b{font-size:86px;color:#15191266}
+    .title{font-size:21px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.artist{color:var(--muted);margin-top:3px}.seek{width:100%;accent-color:var(--accent);margin:22px 0 2px}.times{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:-3px}
+    .controls{display:flex;align-items:center;justify-content:center;gap:20px;margin:16px 0 4px}.icon{background:transparent;font-size:22px;min-width:42px;min-height:42px;color:#d7d6dc}.icon.active{color:var(--accent)}.play{width:60px;height:60px;border-radius:50%;background:var(--accent);color:#151712;font-size:24px;font-weight:800}.vol{width:100%;accent-color:var(--accent);margin:12px auto 0;max-width:220px}
+    .toolbar{display:flex;gap:10px}.action{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:650;flex:1}.action.primary{background:var(--accent);color:#151712;border-color:var(--accent)}
+    .library-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px}.library-head h2{font-size:19px;margin:0}.count{font-size:12px;color:var(--muted)}
+    .tabs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.tab{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 13px;white-space:nowrap;color:var(--muted)}.tab.selected{background:#30322b;color:var(--accent);border-color:#687b50}
+    .track-list{display:flex;flex-direction:column;gap:7px}.track{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid transparent;border-radius:15px;padding:10px 12px}.track.current{border-color:#758b54}.track-info{min-width:0;flex:1}.track-name{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track-sub{font-size:12px;color:var(--muted)}.rowbtn{background:transparent;color:var(--muted);font-size:19px;padding:8px}.empty{text-align:center;color:var(--muted);padding:24px 12px;border:1px dashed var(--line);border-radius:16px}
+    dialog{background:#202027;color:var(--white);border:1px solid var(--line);border-radius:20px;width:min(92vw,420px);padding:20px}dialog::backdrop{background:#0009}dialog h3{margin-top:0}dialog input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#121217;color:white;margin:8px 0 14px}.dialog-actions{display:flex;gap:8px;justify-content:flex-end}.small{padding:10px 14px;border-radius:10px;background:#32323a}.small.go{background:var(--accent);color:#151712;font-weight:700}
+    .note{font-size:12px;color:var(--muted);text-align:center}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header><div><div class="brand">loop<span>.</span></div><div class="tag">your music, your rules</div></div><div class="tag" id="installHint">Made for listening</div></header>
+  <section class="now" aria-label="Now playing">
+    <div class="art"><b>♫</b></div><div class="title" id="nowTitle">Nothing playing</div><div class="artist" id="nowArtist">Add music from your phone</div>
+    <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+    <div class="times"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
+    <div class="controls"><button class="icon" id="shuffle" title="Shuffle">⤨</button><button class="icon" id="prev" title="Previous">↶</button><button class="play" id="play" title="Play">▶</button><button class="icon" id="next" title="Next">↷</button><button class="icon" id="repeat" title="Repeat off">↻</button></div>
+    <input class="vol" id="volume" type="range" min="0" max="1" step=".01" value=".8" aria-label="Volume">
+  </section>
+  <div class="toolbar"><button class="action primary" id="addMusic">＋ Add music</button><button class="action" id="newPlaylist">＋ Playlist</button><input id="files" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.opus" multiple hidden></div>
+  <section><div class="library-head"><h2 id="listHeading">Your library</h2><span class="count" id="trackCount">0 songs</span></div><div class="tabs" id="tabs" style="margin:12px 0"></div><div class="track-list" id="tracks"></div></section>
+  <div class="note">Songs stay on this device. Background playback works after installing from a secure website.</div>
+</main>
+<dialog id="playlistDialog"><form method="dialog"><h3>Create playlist</h3><input id="playlistName" type="text" maxlength="50" placeholder="Playlist name" required><div class="dialog-actions"><button class="small" value="cancel">Cancel</button><button class="small go" id="createPlaylist" value="create">Create</button></div></form></dialog>
+<audio id="audio" preload="metadata"></audio>
+<script>
+const DB='loop-player-v1', STORE='songs'; let db, songs=[], playlists=[], activeList='all', currentId=null, repeatMode=0, shuffleOn=false, queue=[];
+const $=id=>document.getElementById(id), audio=$('audio');
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore(STORE,{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function allSongs(){return new Promise((resolve,reject)=>{const r=db.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+function putSong(song){return new Promise((resolve,reject)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).put(song);r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
+function deleteSong(id){return new Promise((resolve,reject)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
+function time(s){if(!Number.isFinite(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
+function current(){return songs.find(s=>s.id===currentId)}
+function listSongs(){if(activeList==='all')return songs;const p=playlists.find(x=>x.id===activeList);return p?songs.filter(s=>p.ids.includes(s.id)):songs}
+function render(){const shown=listSongs();$('trackCount').textContent=shown.length+' song'+(shown.length===1?'':'s');$('listHeading').textContent=activeList==='all'?'Your library':(playlists.find(p=>p.id===activeList)?.name||'Playlist');$('tabs').innerHTML='<button class="tab '+(activeList==='all'?'selected':'')+'" data-id="all">All songs</button>'+playlists.map(p=>'<button class="tab '+(activeList===p.id?'selected':'')+'" data-id="'+p.id+'">'+esc(p.name)+'</button>').join('');$('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{activeList=b.dataset.id;render()});$('tracks').innerHTML=shown.length?shown.map(s=>'<div class="track '+(s.id===currentId?'current':'')+'" data-id="'+s.id+'"><button class="rowbtn playrow" title="Play">'+(s.id===currentId&& !audio.paused?'Ⅱ':'▶')+'</button><div class="track-info"><div class="track-name">'+esc(s.title)+'</div><div class="track-sub">'+esc(s.artist||'On this device')+'</div></div><button class="rowbtn remove" title="Remove">⋯</button></div>').join(''):'<div class="empty">'+(activeList==='all'?'Your library is empty. Tap “Add music” to choose songs on your phone.':'This playlist is empty. Add songs with the ⋯ menu.')+'</div>';document.querySelectorAll('.playrow').forEach(b=>b.onclick=()=>playSong(b.closest('.track').dataset.id));document.querySelectorAll('.remove').forEach(b=>b.onclick=()=>songMenu(b.closest('.track').dataset.id));updateNow()}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function updateNow(){const s=current();$('nowTitle').textContent=s?.title||'Nothing playing';$('nowArtist').textContent=s?.artist|| (s?'On this device':'Add music from your phone');$('play').textContent=audio.paused?'▶':'Ⅱ';$('duration').textContent=time(audio.duration);if(Number.isFinite(audio.duration)&&audio.duration>0)$('seek').value=Math.round(audio.currentTime/audio.duration*1000);document.title=(s?s.title+' · ':'')+'Loop — Music player';if('mediaSession'in navigator&&s){navigator.mediaSession.metadata=new MediaMetadata({title:s.title,artist:s.artist||'On this device',album:s.album||''});navigator.mediaSession.playbackState=audio.paused?'paused':'playing'}}
+async function playSong(id){const s=songs.find(x=>x.id===id);if(!s)return;currentId=id;const url=URL.createObjectURL(s.blob);if(audio._url)URL.revokeObjectURL(audio._url);audio._url=url;audio.src=url;queue=listSongs().map(x=>x.id);if(!queue.includes(id))queue=[id,...queue];await audio.play().catch(()=>{});updateNow();render()}
+function nextSong(direction=1){const arr=queue.length?queue:listSongs().map(s=>s.id);if(!arr.length)return;let i=arr.indexOf(currentId),n;if(shuffleOn&&direction===1)n=Math.floor(Math.random()*arr.length);else n=(i+direction+arr.length)%arr.length;if(repeatMode===0&&direction===1&&i===arr.length-1)return;playSong(arr[n])}
+async function importFiles(files){for(const f of files){if(!f.type.startsWith('audio/')&&!/\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(f.name))continue;const title=f.name.replace(/\.[^.]+$/,'');const id=crypto.randomUUID();const s={id,title,artist:'',album:'',blob:f,added:Date.now()};await putSong(s);songs.push(s)}render()}
+async function songMenu(id){const s=songs.find(x=>x.id===id);if(!s)return;const options=['Remove from library',...playlists.map(p=>'Add to '+p.name)];const choice=prompt(options.map((x,i)=>`${i+1}. ${x}`).join('\n'),'');const n=Number(choice)-1;if(n===0){if(id===currentId){audio.pause();audio.removeAttribute('src');currentId=null}await deleteSong(id);songs=songs.filter(x=>x.id!==id);playlists.forEach(p=>p.ids=p.ids.filter(x=>x!==id));saveLists();render()}else if(n>0&&playlists[n-1]){const p=playlists[n-1];if(!p.ids.includes(id))p.ids.push(id);saveLists();render()}}
+function saveLists(){localStorage.setItem('loop-playlists',JSON.stringify(playlists))}
+$('addMusic').onclick=()=>$('files').click();$('files').onchange=e=>importFiles([...e.target.files]).finally(()=>e.target.value='');$('newPlaylist').onclick=()=>$('playlistDialog').showModal();$('createPlaylist').onclick=e=>{const name=$('playlistName').value.trim();if(name){playlists.push({id:crypto.randomUUID(),name,ids:[]});saveLists();setTimeout(()=>{activeList=playlists.at(-1).id;render()},0)}};
+$('play').onclick=()=>{if(!current()){const s=listSongs()[0];if(s)playSong(s.id);return}audio.paused?audio.play():audio.pause();updateNow()};$('prev').onclick=()=>{if(audio.currentTime>3)audio.currentTime=0;else nextSong(-1)};$('next').onclick=()=>nextSong();$('shuffle').onclick=()=>{shuffleOn=!shuffleOn;$('shuffle').classList.toggle('active',shuffleOn)};$('repeat').onclick=()=>{repeatMode=(repeatMode+1)%3;$('repeat').classList.toggle('active',repeatMode>0);$('repeat').textContent=repeatMode===2?'↻¹':'↻';$('repeat').title=['Repeat off','Repeat playlist','Repeat song'][repeatMode]};$('seek').oninput=e=>{if(Number.isFinite(audio.duration))audio.currentTime=e.target.value/1000*audio.duration};$('volume').oninput=e=>audio.volume=Number(e.target.value);
+audio.addEventListener('timeupdate',()=>{$('elapsed').textContent=time(audio.currentTime);if(Number.isFinite(audio.duration)&&audio.duration>0)$('seek').value=Math.round(audio.currentTime/audio.duration*1000)});audio.addEventListener('loadedmetadata',updateNow);audio.addEventListener('play',updateNow);audio.addEventListener('pause',updateNow);audio.addEventListener('ended',()=>{if(repeatMode===2){audio.currentTime=0;audio.play()}else nextSong()});
+if('mediaSession'in navigator){navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());navigator.mediaSession.setActionHandler('previoustrack',()=>nextSong(-1));navigator.mediaSession.setActionHandler('nexttrack',()=>nextSong())}
+async function init(){db=await openDB();songs=await allSongs();try{playlists=JSON.parse(localStorage.getItem('loop-playlists')||'[]')}catch{}render();if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{})}init();
+</script>
+</body>
+</html>
